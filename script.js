@@ -9,22 +9,25 @@ let groups = {
   Scissors:{}
 }
 
+let data = []
+
 function setup() {
-  new Canvas(windowWidth, windowHeight)
+  new Canvas(windowWidth-10, windowHeight-10)
   for( [k,v] of Object.entries(palette) ) { palette[k] = color(v) }
   background(255)
+
+  populate()
+  boundaries() 
+}
+
+function populate() {
   for( const g in groups ) {
     groups[g] = new Group()    
     for( let i = 0; i < 33; i++ ) {
       createPlay(g)
     }
   }
-
-  new Sprite(0,0,width*2,1,"s")
-  new Sprite(0,0,1,height*2,"s")
-  new Sprite(0,height,width*2,1,"s")
-  new Sprite(width,0,1,height*2,"s")
-
+  
   groups.Rock.overlaps(groups.Scissors, (a,b) => {
     const c = createPlay( Play.Rock.name, {x:b.x, y:b.y, velocity:b.velocity} )
     b.remove()    
@@ -39,10 +42,22 @@ function setup() {
   })
 }
 
+function boundaries() {
+  createBoundary(0,0,width*2,1,"s")
+  createBoundary(0,0,1,height*2,"s")
+  createBoundary(0,height,width*2,1,"s")
+  createBoundary(width,0,1,height*2,"s")
+}
+
+function createBoundary( x,y,w,h ) {
+  const b = new Sprite(x,y,w,h,"s")
+  b.friction = 0
+}
+
 function createPlay(type, {
   x = random(width),
   y = random(height),
-  velocity = {x: random(-1,1), y: random(-1,1)},
+  velocity = {x: random(-3,3), y: random(-3,3)},
 } = {}) {
   const newSprite = new groups[type].Sprite()
   newSprite.img = Play[type].art
@@ -51,6 +66,7 @@ function createPlay(type, {
   newSprite.velocity.x = velocity.x
   newSprite.velocity.y = velocity.y
   newSprite.rotation = atan2(newSprite.velocity.y, newSprite.velocity.x)
+  newSprite.bounciness = 1.1
 }
 
 
@@ -62,4 +78,40 @@ function draw() {
   text(`Paper: ${groups.Paper.length}`, 10, 22 )
   fill( palette.c )
   text(`Scissors: ${groups.Scissors.length}`, 10, 34 )
+  data.push( [groups.Rock.length,groups.Paper.length,groups.Scissors.length] )
+  if( groups.Rock.length === 99 || groups.Paper.length === 99 || groups.Scissors.length === 99 ) {
+    noLoop()
+    allSprites.remove()
+    fill('white')
+    noStroke()
+    const h_3 = height/4
+    rect(0,h_3,width,2*h_3)
+    const dx = width/data.length
+    for( let i = 0; i < data.length; i++ ) {
+      const d = data[i]
+      fill(palette.a)
+      circle(dx*i,map(d[0],0,99,3*h_3,h_3),2)
+      fill(palette.b)
+      circle(dx*i,map(d[1],0,99,3*h_3,h_3),2)
+      fill(palette.c)
+      circle(dx*i,map(d[2],0,99,3*h_3,h_3),2)
+    }
+  }
+}
+
+function keyPressed() {
+  if( key === 'r' ) {
+    data = []
+    populate()
+    boundaries()
+    loop()
+  }
+  if( key === 's' ) {
+    saveCanvas(`RPSresults${Date.now()}.png`)
+  }
+  if( key === 'v' ) {
+    for( const s of allSprites ) {
+      s.velocity = {x: random(-3,3), y: random(-3,3)}
+    }
+  }
 }
