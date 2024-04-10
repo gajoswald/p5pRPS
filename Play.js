@@ -44,7 +44,6 @@ class Play {
     }
 
     for( const k in Play.Beats ) {
-      console.log( k,  )
       Play.all[k].overlaps(Play.all[Play.Beats[k]], (a,b) => {
         const c = Play.createPlay( k, {x:b.x, y:b.y, velocity:b.velocity})
         b.remove()
