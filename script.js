@@ -3,12 +3,19 @@ let palette = {a:'#e6194b', b:'#3cb44b', c:'#ffe119', d:'#4363d8', e:'#f58231', 
 
 let data = []
 const N = 33
+let game
 function setup() {
   new Canvas(windowWidth-10, windowHeight-10)
   for( [k,v] of Object.entries(palette) ) { palette[k] = color(v) }
   background(255)
-  Play.initializeStatic()
-  Play.populate(N)
+  game = new Game()
+  game.addType("Rock",spriteArt(Art.Rock,2,palette))
+  game.addType("Paper",spriteArt(Art.Paper,2,palette))
+  game.addType("Scissors",spriteArt(Art.Scissors,2,palette))
+  game.addRule("Rock","Scissors")
+  game.addRule("Paper","Rock")
+  game.addRule("Scissors","Paper")
+  game.populate()
   boundaries() 
 }
 
@@ -25,15 +32,18 @@ function createBoundary( x,y,w,h ) {
 }
 
 function draw() {
+  const rocks = game.getTypeCount("Rock")
+  const papers = game.getTypeCount("Paper")
+  const scissorss = game.getTypeCount("Scissors")
   clear()
   fill( palette.a )
-  text( `Rock: ${Play.all.Rock.length}`, 10, 10 )
+  text( `Rock: ${rocks}`, 10, 10 )
   fill( palette.b )
-  text(`Paper: ${Play.all.Paper.length}`, 10, 22 )
+  text(`Paper: ${papers}`, 10, 22 )
   fill( palette.c )
-  text(`Scissors: ${Play.all.Scissors.length}`, 10, 34 )
-  data.push( [Play.all.Rock.length,Play.all.Paper.length,Play.all.Scissors.length] )
-  if( Play.all.Rock.length === N*3 || Play.all.Paper.length === N*3 || Play.all.Scissors.length === N*3 ) {
+  text(`Scissors: ${scissorss}`, 10, 34 )
+  data.push( [rocks,papers,scissorss] )
+  if( rocks === N*3 || papers === N*3 || scissorss === N*3 ) {
     noLoop()
     allSprites.remove()
     fill('white')
@@ -56,7 +66,7 @@ function draw() {
 function keyPressed() {
   if( key === 'r' ) {
     data = []
-    Play.populate(N)
+    game.populate()
     boundaries()
     loop()
   }

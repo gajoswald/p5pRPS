@@ -1,58 +1,63 @@
-class Play {
-  static all = {}
-  static art = {}
-  
-  static Type = {
-    Rock: "Rock",
-    Paper: "Paper",
-    Scissors: "Scissors"
+class Game {
+  constructor(N = 33) {
+    this.N = N
+    this.type = {}
+    this.rules = {}
   }
 
-  static Beats = {
-    Rock: Play.Type.Scissors,
-    Paper: Play.Type.Rock,
-    Scissors: Play.Type.Paper
-  }
+  getTypeCount(type) { return this.type[type]?.group.length ?? 0 }
 
-  static initializeStatic() {
-    for( const type in Play.Type ) {
-      Play.all[type] = new Group()
-      Play.art[type] = spriteArt(Play.Art[type],2,palette)
+  addType(name, art) {
+    this.type[name] = {
+      group: new Group(),
+      art: art ?? undefined
     }
   }
 
-  static createPlay(type, {
-    x = random(width),
-    y = random(height),
-    velocity = {x: random(-3,3), y: random(-3,3)},
-  } = {}) {
-    const newSprite = new Play.all[type].Sprite()
-    newSprite.img = Play.art[type]
-    newSprite.x = x
-    newSprite.y = y
-    newSprite.velocity.x = velocity.x
-    newSprite.velocity.y = velocity.y
-    newSprite.rotation = atan2(newSprite.velocity.y, newSprite.velocity.x)
-    newSprite.bounciness = 1.1
-  }
-
-  static populate(n) {
-    for( const type in Play.Type ) {
-      for( let i = 0; i < n; i++ ) {
-        Play.createPlay(type)
-      }
-    }
-
-    for( const k in Play.Beats ) {
-      Play.all[k].overlaps(Play.all[Play.Beats[k]], (a,b) => {
-        const c = Play.createPlay( k, {x:b.x, y:b.y, velocity:b.velocity})
-        b.remove()
+  addRule(a,b) {
+    if( this.type[a] && this.type[b] ) {
+      this.rules[a] = b
+      this.type[a].group.overlaps(this.type[b].group, (winner,loser) => {
+        this.addSprite( a, {x:loser.x, y:loser.y, velocity:loser.velocity})
+        loser.remove()
       })
+    }
+  }
+
+  addArt(type,art) {
+    if( this.type[type] ) {
+      this.type[type].art = art
+    }
+  }
+
+  addSprite(type, {
+      x = random(width),
+      y = random(height),
+      velocity = {x: random(-3,3), y: random(-3,3)},
+    } = {}) {
+    if( this.type[type] ) {
+      const newSprite = new this.type[type].group.Sprite()
+      if( this.type[type].art ) {
+        newSprite.img = this.type[type].art
+      }
+      newSprite.x = x
+      newSprite.y = y
+      newSprite.velocity = velocity
+      newSprite.rotation = atan2(newSprite.velocity.y, newSprite.velocity.x)
+      newSprite.bounciness = 1.1
+    }
+  }
+
+  populate(n = this.N) {
+    for( const type in this.type ) {
+      for( let i = 0; i < n; i++ ) {
+        this.addSprite(type)
+      }
     }
   }
 }
 
-Play.Art = {
+Art = {
   Rock: `
 aaaaaa
 .a   aa
